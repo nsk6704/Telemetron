@@ -1,0 +1,12 @@
+# IDE
+.idea/
+*.iml
+
+# Go
+bin/
+dist/
+*.exe
+*.so
+*.dylib
+
+# Environment
