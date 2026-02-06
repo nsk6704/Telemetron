@@ -2,8 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
+	"telemetron/pkg/config"
+	"telemetron/pkg/logger"
+
+	"go.uber.org/zap"
 )
 
 type SystemState struct {
@@ -22,6 +26,7 @@ type Agent struct {
 	Models                 []string `json:"models"`
 	Activity               Activity `json:"activity"`
 }
+
 type Activity struct {
 	ActiveTaskIDs []TaskStatus `json:"active_task_ids"`
 	UpdatedAt     string       `json:"updated_at"`
@@ -79,16 +84,6 @@ type LiteLLM struct {
 	PaymentType string `json:"payment_type"`
 }
 
-func main() {
-	http.HandleFunc("/system/state", systemStateHandler)
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Telemetron API - visit /system/state"))
-	})
-
-	log.Println("Server running on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
-}
-
 func systemStateHandler(w http.ResponseWriter, r *http.Request) {
 	response := SystemState{
 		ID: "system-1",
@@ -142,4 +137,25 @@ func systemStateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+}
+
+func main() {
+	cfg := config.Load()
+
+	if err := logger.Init(cfg.LogLevel); err != nil {
+		panic(fmt.Sprintf("Failed to initialize logger: %v", err))
+	}
+	defer logger.Close()
+
+	http.HandleFunc("/system/state", systemStateHandler)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Telemetron API - visit /system/state"))
+	})
+
+	addr := ":" + cfg.ServerPort
+	logger.Log.Info("Starting Telemetron server", zap.String("address", addr))
+
+	if err := http.ListenAndServe(addr, nil); err != nil {
+		logger.Log.Fatal("Server error", zap.Error(err))
+	}
 }
