@@ -127,28 +127,33 @@ Returns unified system state as JSON conforming to the comprehensive schema.
 ### Project Structure
 
 ```
-telemetron/
+.
 ├── cmd/server/              # Application entry point
 │   ├── main.go             # Server setup and routing
-│   ├── handler_test.go     # HTTP handler tests
-│   └── main_test.go        # Integration tests
+│   ├── main_test.go        # Integration tests
+│   └── handler_test.go     # HTTP handler tests
 ├── internal/
-│   ├── handlers/           # HTTP request handlers  
+│   ├── handlers/           # HTTP request handlers (placeholder)
 │   ├── models/             # Data models and schemas
 │   │   ├── system_state.go
 │   │   └── system_state_test.go
-│   ├── repositories/       # Data access layer
+│   ├── repositories/       # Data access layer (mock implementations)
 │   │   ├── interfaces.go   # Repository contracts
-│   │   ├── mock_*.go       # Mock implementations
+│   │   ├── mock_agent.go   # Mock agent data
+│   │   ├── mock_others.go  # Mock workload, queue, and LLM data
 │   │   └── mock_test.go    # Repository tests
 │   └── services/           # Business logic layer
 │       ├── system_service.go
 │       └── system_service_test.go
 ├── pkg/
-│   ├── config/             # Configuration management
-│   └── logger/             # Structured logging
-├── docs/                   # Generated API documentation
-├── scripts/                # Development scripts
+│   ├── config/             # Configuration management (config.go)
+│   └── logger/             # Structured logging (logger.go)
+├── docs/                   # API documentation (Swagger/OpenAPI)
+│   ├── docs.go
+│   ├── swagger.json
+│   └── swagger.yaml                # Utility scripts
+├── go.mod                  # Go module definition
+├── go.sum                  # Dependency checksums
 └── README.md
 ```
 
@@ -235,54 +240,7 @@ export LOG_LEVEL=debug
 
 The system uses `pkg/config/config.go` for centralized configuration management with sensible defaults.
 
-## Deployment
 
-### Docker (Future)
-
-```dockerfile
-# Dockerfile example
-FROM golang:1.21-alpine AS builder
-WORKDIR /app
-COPY go.* ./
-RUN go mod download
-COPY . .
-RUN go build -o telemetron cmd/server/main.go
-
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates
-WORKDIR /root/
-COPY --from=builder /app/telemetron .
-EXPOSE 8080
-CMD ["./telemetron"]
-```
-
-### Kubernetes (Future)
-
-```yaml
-# deployment.yaml example
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: telemetron
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: telemetron
-  template:
-    metadata:
-      labels:
-        app: telemetron
-    spec:
-      containers:
-      - name: telemetron
-        image: telemetron:latest
-        ports:
-        - containerPort: 8080
-        env:
-        - name: LOG_LEVEL
-          value: "info"
-```
 
 ## Usage Scenarios
 
