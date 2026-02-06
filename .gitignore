@@ -1,10 +1,15 @@
 # Test coverage
 coverage.out
 coverage.html
+coverage
 coverage/
 
 # Go generated files
 docs/
+
+
+*.exe
+*.exe~
 
 # IDE files
 .idea/
