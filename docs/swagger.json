@@ -1,0 +1,234 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Telemetry and agent orchestration API.",
+        "title": "Telemetron API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/system/state": {
+            "get": {
+                "description": "Returns the current state of agents, workloads, queues, and LiteLLM models",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get system state",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.SystemState"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.Activity": {
+            "type": "object",
+            "properties": {
+                "active_task_ids": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.TaskStatus"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Agent": {
+            "type": "object",
+            "properties": {
+                "activity": {
+                    "$ref": "#/definitions/models.Activity"
+                },
+                "deployment_name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "max_parallel_invocations": {
+                    "type": "integer"
+                },
+                "models": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.LiteLLM": {
+            "type": "object",
+            "properties": {
+                "model": {
+                    "type": "string"
+                },
+                "payment_type": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "rpm": {
+                    "type": "integer"
+                },
+                "rpm_max": {
+                    "type": "integer"
+                },
+                "tpm": {
+                    "type": "integer"
+                },
+                "tpm_max": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.LiveWorkload": {
+            "type": "object",
+            "properties": {
+                "active_pods": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Pod": {
+            "type": "object",
+            "properties": {
+                "cpu": {
+                    "type": "number"
+                },
+                "memory": {
+                    "type": "integer"
+                },
+                "pod_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Priority": {
+            "type": "object",
+            "properties": {
+                "level": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Queue": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.QueueTask"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.QueueTask": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "priority": {
+                    "$ref": "#/definitions/models.Priority"
+                },
+                "submitted_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.SystemState": {
+            "type": "object",
+            "properties": {
+                "agents": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Agent"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "litellm": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.LiteLLM"
+                    }
+                },
+                "queues": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Queue"
+                    }
+                },
+                "workload": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Workload"
+                    }
+                }
+            }
+        },
+        "models.TaskStatus": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Workload": {
+            "type": "object",
+            "properties": {
+                "deployment_name": {
+                    "type": "string"
+                },
+                "live": {
+                    "$ref": "#/definitions/models.LiveWorkload"
+                },
+                "max_pods": {
+                    "type": "integer"
+                },
+                "pod_max_cpu": {
+                    "type": "string"
+                },
+                "pod_max_ram": {
+                    "type": "string"
+                },
+                "pods": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Pod"
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,153 @@
+basePath: /
+definitions:
+  models.Activity:
+    properties:
+      active_task_ids:
+        items:
+          $ref: '#/definitions/models.TaskStatus'
+        type: array
+      updated_at:
+        type: string
+    type: object
+  models.Agent:
+    properties:
+      activity:
+        $ref: '#/definitions/models.Activity'
+      deployment_name:
+        type: string
+      description:
+        type: string
+      max_parallel_invocations:
+        type: integer
+      models:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+    type: object
+  models.LiteLLM:
+    properties:
+      model:
+        type: string
+      payment_type:
+        type: string
+      provider:
+        type: string
+      rpm:
+        type: integer
+      rpm_max:
+        type: integer
+      tpm:
+        type: integer
+      tpm_max:
+        type: integer
+    type: object
+  models.LiveWorkload:
+    properties:
+      active_pods:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  models.Pod:
+    properties:
+      cpu:
+        type: number
+      memory:
+        type: integer
+      pod_id:
+        type: string
+      status:
+        type: string
+    type: object
+  models.Priority:
+    properties:
+      level:
+        type: string
+    type: object
+  models.Queue:
+    properties:
+      name:
+        type: string
+      tasks:
+        items:
+          $ref: '#/definitions/models.QueueTask'
+        type: array
+      updated_at:
+        type: string
+    type: object
+  models.QueueTask:
+    properties:
+      id:
+        type: string
+      priority:
+        $ref: '#/definitions/models.Priority'
+      submitted_at:
+        type: string
+    type: object
+  models.SystemState:
+    properties:
+      agents:
+        items:
+          $ref: '#/definitions/models.Agent'
+        type: array
+      id:
+        type: string
+      litellm:
+        items:
+          $ref: '#/definitions/models.LiteLLM'
+        type: array
+      queues:
+        items:
+          $ref: '#/definitions/models.Queue'
+        type: array
+      workload:
+        items:
+          $ref: '#/definitions/models.Workload'
+        type: array
+    type: object
+  models.TaskStatus:
+    properties:
+      id:
+        type: string
+      status:
+        type: string
+    type: object
+  models.Workload:
+    properties:
+      deployment_name:
+        type: string
+      live:
+        $ref: '#/definitions/models.LiveWorkload'
+      max_pods:
+        type: integer
+      pod_max_cpu:
+        type: string
+      pod_max_ram:
+        type: string
+      pods:
+        items:
+          $ref: '#/definitions/models.Pod'
+        type: array
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Telemetry and agent orchestration API.
+  title: Telemetron API
+  version: "1.0"
+paths:
+  /system/state:
+    get:
+      description: Returns the current state of agents, workloads, queues, and LiteLLM
+        models
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SystemState'
+      summary: Get system state
+swagger: "2.0"
