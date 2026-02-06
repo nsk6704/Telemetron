@@ -1,12 +1,15 @@
-# IDE
+# Test coverage
+coverage.out
+coverage.html
+coverage/
+
+# Go generated files
+docs/
+
+# IDE files
 .idea/
 *.iml
 
-# Go
-bin/
-dist/
-*.exe
-*.so
-*.dylib
-
-# Environment
+# OS files
+.DS_Store
+Thumbs.db
