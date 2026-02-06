@@ -99,7 +99,45 @@ func systemStateHandler(w http.ResponseWriter, r *http.Request) {
 				MaxParallelInvocations: 5,
 				DeploymentName:         "agent-deployment-1",
 				Models:                 []string{"gpt-4", "gpt-3.5-turbo"},
+				Activity: Activity{
+					ActiveTaskIDs: []TaskStatus{
+						{ID: "task-1", Status: "running"},
+						{ID: "task-2", Status: "pending"},
+					},
+					UpdatedAt: "2025-01-15T10:30:00Z",
+				},
 			},
+		},
+		Workload: []Workload{
+			{
+				DeploymentName: "agent-deployment-1",
+				MaxPods:        10,
+				PodMaxRAM:      "2Gi",
+				PodMaxCPU:      "1000m",
+				Live: LiveWorkload{
+					ActivePods: 3,
+					UpdatedAt:  "2025-01-15T10:30:00Z",
+				},
+				Pods: []Pod{
+					{PodID: "pod-1", CPU: 0.5, Memory: 1024, Status: "running"},
+					{PodID: "pod-2", CPU: 0.3, Memory: 512, Status: "running"},
+					{PodID: "pod-3", CPU: 0.2, Memory: 256, Status: "running"},
+				},
+			},
+		},
+		Queues: []Queue{
+			{
+				Name:      "default",
+				UpdatedAt: "2025-01-15T10:30:00Z",
+				Tasks: []QueueTask{
+					{ID: "task-1", Priority: Priority{Level: "high"}, SubmittedAt: "2025-01-15T10:25:00Z"},
+					{ID: "task-2", Priority: Priority{Level: "medium"}, SubmittedAt: "2025-01-15T10:28:00Z"},
+				},
+			},
+		},
+		LiteLLM: []LiteLLM{
+			{Model: "gpt-4", Provider: "openai", TPM: 45000, RPM: 200, TPMMax: 90000, RPMMax: 3500, PaymentType: "pay-per-request"},
+			{Model: "gpt-3.5-turbo", Provider: "openai", TPM: 120000, RPM: 3400, TPMMax: 240000, RPMMax: 3500, PaymentType: "pay-per-request"},
 		},
 	}
 	w.Header().Set("Content-Type", "application/json")
