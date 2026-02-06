@@ -1,69 +1,46 @@
 package main
 
+// @title Telemetron API
+// @version 1.0
+// @description Telemetry and agent orchestration API.
+// @host localhost:8080
+// @BasePath /
+
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"telemetron/internal/models"
+	_ "telemetron/docs" // Import generated docs
+	"telemetron/internal/repositories"
+	"telemetron/internal/services"
 	"telemetron/pkg/config"
 	"telemetron/pkg/logger"
 
+	httpSwagger "github.com/swaggo/http-swagger"
 	"go.uber.org/zap"
 )
 
-func systemStateHandler(w http.ResponseWriter, r *http.Request) {
-	response := models.SystemState{
-		ID: "system-1",
-		Agents: []models.Agent{
-			{
-				Name:                   "agent-1",
-				Description:            "Data processing agent",
-				MaxParallelInvocations: 5,
-				DeploymentName:         "agent-deployment-1",
-				Models:                 []string{"gpt-4", "gpt-3.5-turbo"},
-				Activity: models.Activity{
-					ActiveTaskIDs: []models.TaskStatus{
-						{ID: "task-1", Status: "running"},
-						{ID: "task-2", Status: "pending"},
-					},
-					UpdatedAt: "2025-01-15T10:30:00Z",
-				},
-			},
-		},
-		Workload: []models.Workload{
-			{
-				DeploymentName: "agent-deployment-1",
-				MaxPods:        10,
-				PodMaxRAM:      "2Gi",
-				PodMaxCPU:      "1000m",
-				Live: models.LiveWorkload{
-					ActivePods: 3,
-					UpdatedAt:  "2025-01-15T10:30:00Z",
-				},
-				Pods: []models.Pod{
-					{PodID: "pod-1", CPU: 0.5, Memory: 1024, Status: "running"},
-					{PodID: "pod-2", CPU: 0.3, Memory: 512, Status: "running"},
-					{PodID: "pod-3", CPU: 0.2, Memory: 256, Status: "running"},
-				},
-			},
-		},
-		Queues: []models.Queue{
-			{
-				Name:      "default",
-				UpdatedAt: "2025-01-15T10:30:00Z",
-				Tasks: []models.QueueTask{
-					{ID: "task-1", Priority: models.Priority{Level: "high"}, SubmittedAt: "2025-01-15T10:25:00Z"},
-					{ID: "task-2", Priority: models.Priority{Level: "medium"}, SubmittedAt: "2025-01-15T10:28:00Z"},
-				},
-			},
-		},
-		LiteLLM: []models.LiteLLM{
-			{Model: "gpt-4", Provider: "openai", TPM: 45000, RPM: 200, TPMMax: 90000, RPMMax: 3500, PaymentType: "pay-per-request"},
-			{Model: "gpt-3.5-turbo", Provider: "openai", TPM: 120000, RPM: 3400, TPMMax: 240000, RPMMax: 3500, PaymentType: "pay-per-request"},
-		},
+// @Summary Get system state
+// @Description Returns the current state of agents, workloads, queues, and LiteLLM models
+// @Tags system
+// @Produce json
+// @Success 200 {object} models.SystemState
+// @Failure 500 {string} string "Internal server error"
+// @Router /system/state [get]
+func systemStateHandler(systemService *services.SystemService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		state, err := systemService.GetSystemState()
+		if err != nil {
+			logger.Log.Error("Failed to get system state", zap.Error(err))
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(state); err != nil {
+			logger.Log.Error("Failed to encode response", zap.Error(err))
+		}
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
 }
 
 func main() {
@@ -74,10 +51,24 @@ func main() {
 	}
 	defer logger.Close()
 
-	http.HandleFunc("/system/state", systemStateHandler)
+	// Initialize repositories
+	agentRepo := repositories.NewMockAgentRepository()
+	workloadRepo := repositories.NewMockWorkloadRepository()
+	queueRepo := repositories.NewMockQueueRepository()
+	llmRepo := repositories.NewMockLiteLLMRepository()
+
+	// Initialize service
+	systemService := services.NewSystemService(agentRepo, workloadRepo, queueRepo, llmRepo)
+	defer systemService.Close()
+
+	// Setup handlers
+	http.HandleFunc("/system/state", systemStateHandler(systemService))
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Telemetron API - visit /system/state"))
+		w.Write([]byte("Telemetron API - visit /system/state or /swagger/"))
 	})
+
+	http.Handle("/swagger/", httpSwagger.WrapHandler)
 
 	addr := ":" + cfg.ServerPort
 	logger.Log.Info("Starting Telemetron server", zap.String("address", addr))
